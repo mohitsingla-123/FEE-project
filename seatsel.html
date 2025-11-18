@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Seats - MovieTix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .booking-info {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .booking-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .value {
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 100px auto 2rem;
+            padding: 0 2rem;
+        }
+
+        .screen-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .screen {
+            width: 80%;
+            max-width: 600px;
+            height: 8px;
+            background: linear-gradient(to bottom, #4ecdc4, transparent);
+            margin: 0 auto 1rem;
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 5px 20px rgba(78, 205, 196, 0.5);
+        }
+
+        .screen-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .layout-container {
+            display: grid;
+            grid-template-columns: 1fr auto 300px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .seating-area {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            overflow-x: auto;
+        }
+
+        .seat-map {
+            display: inline-block;
+            min-width: 600px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .row-label {
+            width: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        .seat {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px 8px 2px 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            border: 2px solid transparent;
+        }
+
+        .seat.available {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .seat.available:hover {
+            background: rgba(78, 205, 196, 0.5);
+            border-color: #4ecdc4;
+            transform: scale(1.1);
+        }
+
+        .seat.selected {
+            background: #4ecdc4;
+            border-color: white;
+            transform: scale(1.05);
+        }
+
+        .seat.booked {
+            background: rgba(255, 107, 107, 0.5);
+            border-color: #ff6b6b;
+            cursor: not-allowed;
+        }
+
+        .seat.vip {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        .seat.vip.selected {
+            background: gold;
+            border-color: white;
+        }
+
+        .spacer {
+            width: 35px;
+        }
+
+        .legend {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .legend-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .legend-seat {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .summary-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            position: sticky;
+            top: 100px;
+        }
+
+        .summary-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #4ecdc4;
+        }
+
+        .selected-seats {
+            margin-bottom: 1.5rem;
+        }
+
+        .seats-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            min-height: 40px;
+        }
+
+        .seat-tag {
+            padding: 0.5rem 1rem;
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid #4ecdc4;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .remove-seat {
+            cursor: pointer;
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .price-breakdown {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .price-row.total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin-top: 1.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+        }
+
+        @media (max-width: 1200px) {
+            .layout-container {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-panel {
+                position: relative;
+                top: 0;
+            }
+
+            .booking-info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .seat-map {
+                min-width: auto;
+            }
+
+            .seat {
+                width: 28px;
+                height: 28px;
+            }
+
+            .row-label {
+                width: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">MovieTix</div>
+            <div class="booking-info" id="bookingInfo">
+                <div class="booking-info-item">
+                    <span class="label">Movie</span>
+                    <span class="value">Cosmic Odyssey</span>
+                </div>
+                <div class="booking-info-item">
+                    <span class="label">Theatre</span>
+                    <span class="value">PVR Cinemas</span>
+                </div>
+                <div class="booking-info-item">
+                    <span class="label">Date & Time</span>
+                    <span class="value">Today, 7:00 PM</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="screen-section">
+            <div class="screen"></div>
+            <div class="screen-label">All eyes this way please!</div>
+        </div>
+
+        <div class="layout-container">
+            <div class="seating-area">
+                <div class="seat-map" id="seatMap"></div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-title">Legend</div>
+                <div class="legend-item">
+                    <div class="legend-seat" style="background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.3);"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-seat" style="background: #4ecdc4;"></div>
+                    <span>Selected</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-seat" style="background: rgba(255, 107, 107, 0.5); border: 2px solid #ff6b6b;"></div>
+                    <span>Booked</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-seat" style="background: rgba(255, 215, 0, 0.3); border: 2px solid rgba(255, 215, 0, 0.5);"></div>
+                    <span>VIP (₹350)</span>
+                </div>
+            </div>
+
+            <div class="summary-panel">
+                <div class="summary-title">Booking Summary</div>
+                
+                <div class="selected-seats">
+                    <strong>Selected Seats:</strong>
+                    <div class="seats-list" id="selectedSeatsList">
+                        <div class="empty-state">No seats selected</div>
+                    </div>
+                </div>
+
+                <div class="price-breakdown">
+                    <div class="price-row">
+                        <span>Regular (₹200)</span>
+                        <span id="regularCount">0 × ₹200</span>
+                    </div>
+                    <div class="price-row">
+                        <span>VIP (₹350)</span>
+                        <span id="vipCount">0 × ₹350</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Convenience Fee</span>
+                        <span id="convenienceFee">₹0</span>
+                    </div>
+                    <div class="price-row total">
+                        <span>Total Amount</span>
+                        <span id="totalAmount">₹0</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="proceedBtn" disabled onclick="proceedToPayment()">
+                    Proceed to Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Seat configuration
+        const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const SEATS_PER_ROW = 16;
+        const VIP_ROWS = ['A', 'B', 'C'];
+        const REGULAR_PRICE = 200;
+        const VIP_PRICE = 350;
+        const CONVENIENCE_FEE_PERCENT = 5;
+
+        // Simulated booked seats
+        const bookedSeats = ['D5', 'D6', 'E7', 'E8', 'F9', 'F10', 'G5', 'G6'];
+
+        let selectedSeats = [];
+
+        // Generate seat map
+        function generateSeatMap() {
+            const seatMap = document.getElementById('seatMap');
+            
+            ROWS.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                
+                // Row label
+                const label = document.createElement('div');
+                label.className = 'row-label';
+                label.textContent = row;
+                rowDiv.appendChild(label);
+                
+                // Generate seats
+                for (let i = 1; i <= SEATS_PER_ROW; i++) {
+                    // Add spacer in the middle
+                    if (i === SEATS_PER_ROW / 2 + 1) {
+                        const spacer = document.createElement('div');
+                        spacer.className = 'spacer';
+                        rowDiv.appendChild(spacer);
+                    }
+                    
+                    const seat = document.createElement('div');
+                    const seatId = `${row}${i}`;
+                    seat.className = 'seat';
+                    seat.dataset.seatId = seatId;
+                    seat.dataset.row = row;
+                    seat.dataset.number = i;
+                    
+                    // Determine seat type and status
+                    if (bookedSeats.includes(seatId)) {
+                        seat.classList.add('booked');
+                    } else {
+                        seat.classList.add('available');
+                        if (VIP_ROWS.includes(row)) {
+                            seat.classList.add('vip');
+                        }
+                        seat.onclick = () => toggleSeat(seatId, seat);
+                    }
+                    
+                    rowDiv.appendChild(seat);
+                }
+                
+                seatMap.appendChild(rowDiv);
+            });
+        }
+
+        // Toggle seat selection
+        function toggleSeat(seatId, seatElement) {
+            if (seatElement.classList.contains('booked')) return;
+            
+            if (seatElement.classList.contains('selected')) {
+                // Deselect
+                seatElement.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(s => s !== seatId);
+            } else {
+                // Select
+                if (selectedSeats.length >= 10) {
+                    alert('You can select maximum 10 seats at a time');
+                    return;
+                }
+                seatElement.classList.add('selected');
+                selectedSeats.push(seatId);
+            }
+            
+            updateSummary();
+        }
+
+        // Update booking summary
+        function updateSummary() {
+            const seatsList = document.getElementById('selectedSeatsList');
+            const regularCountEl = document.getElementById('regularCount');
+            const vipCountEl = document.getElementById('vipCount');
+            const convenienceFeeEl = document.getElementById('convenienceFee');
+            const totalAmountEl = document.getElementById('totalAmount');
+            const proceedBtn = document.getElementById('proceedBtn');
+            
+            // Update seats list
+            if (selectedSeats.length === 0) {
+                seatsList.innerHTML = '<div class="empty-state">No seats selected</div>';
+                proceedBtn.disabled = true;
+            } else {
+                seatsList.innerHTML = selectedSeats.map(seatId => `
+                    <div class="seat-tag">
+                        ${seatId}
+                        <span class="remove-seat" onclick="removeSeat('${seatId}')">✕</span>
+                    </div>
+                `).join('');
+                proceedBtn.disabled = false;
+            }
+            
+            // Calculate prices
+            let regularCount = 0;
+            let vipCount = 0;
+            
+            selectedSeats.forEach(seatId => {
+                const row = seatId[0];
+                if (VIP_ROWS.includes(row)) {
+                    vipCount++;
+                } else {
+                    regularCount++;
+                }
+            });
+            
+            const regularTotal = regularCount * REGULAR_PRICE;
+            const vipTotal = vipCount * VIP_PRICE;
+            const subtotal = regularTotal + vipTotal;
+            const convenienceFee = Math.round(subtotal * CONVENIENCE_FEE_PERCENT / 100);
+            const total = subtotal + convenienceFee;
+            
+            // Update display
+            regularCountEl.textContent = `${regularCount} × ₹${REGULAR_PRICE}`;
+            vipCountEl.textContent = `${vipCount} × ₹${VIP_PRICE}`;
+            convenienceFeeEl.textContent = `₹${convenienceFee}`;
+            totalAmountEl.textContent = `₹${total}`;
+        }
+
+        // Remove seat
+        function removeSeat(seatId) {
+            const seatElement = document.querySelector(`[data-seat-id="${seatId}"]`);
+            if (seatElement) {
+                seatElement.classList.remove('selected');
+                selectedSeats = selectedSeats.filter(s => s !== seatId);
+                updateSummary();
+            }
+        }
+
+        // Proceed to payment
+        function proceedToPayment() {
+            if (selectedSeats.length === 0) {
+                alert('Please select at least one seat');
+                return;
+            }
+            
+            // Calculate total
+            let regularCount = 0;
+            let vipCount = 0;
+            
+            selectedSeats.forEach(seatId => {
+                const row = seatId[0];
+                if (VIP_ROWS.includes(row)) {
+                    vipCount++;
+                } else {
+                    regularCount++;
+                }
+            });
+            
+            const regularTotal = regularCount * REGULAR_PRICE;
+            const vipTotal = vipCount * VIP_PRICE;
+            const subtotal = regularTotal + vipTotal;
+            const convenienceFee = Math.round(subtotal * CONVENIENCE_FEE_PERCENT / 100);
+            const total = subtotal + convenienceFee;
+            
+            // Store booking data
+            const bookingData = {
+                seats: selectedSeats,
+                regularCount,
+                vipCount,
+                subtotal,
+                convenienceFee,
+                total
+            };
+            
+            localStorage.setItem('seatBooking', JSON.stringify(bookingData));
+            
+            // Redirect to payment
+            window.location.href = 'payment.html';
+        }
+
+        // Load booking info
+        function loadBookingInfo() {
+            try {
+                const bookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
+                if (bookingDetails.movie) {
+                    document.querySelector('.booking-info .value:nth-child(1)').textContent = bookingDetails.movie || 'Cosmic Odyssey';
+                }
+            } catch (e) {
+                console.log('No previous booking details found');
+            }
+        }
+
+        // Initialize
+        generateSeatMap();
+        loadBookingInfo();
+        updateSummary();
+    </script>
+</body>
+</html>

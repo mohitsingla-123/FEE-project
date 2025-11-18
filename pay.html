@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - MovieTix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 1rem 0;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .payment-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .payment-method {
+            flex: 1;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .payment-method.active {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+        }
+
+        .summary-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <a href="home.html" class="logo">MovieTix</a>
+            <div style="color: #4ecdc4;">🔒 Secure Payment</div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="payment-section">
+            <h2 style="font-size: 1.8rem; margin-bottom: 1.5rem; color: #4ecdc4;">Select Payment Method</h2>
+            
+            <div class="payment-methods">
+                <div class="payment-method active">💳<br>Card</div>
+                <div class="payment-method">📱<br>UPI</div>
+                <div class="payment-method">🏦<br>Net Banking</div>
+            </div>
+
+            <form onsubmit="processPayment(event)">
+                <div class="form-group">
+                    <label>Card Number</label>
+                    <input type="text" placeholder="1234 5678 9012 3456" required>
+                </div>
+                <div class="form-group">
+                    <label>Cardholder Name</label>
+                    <input type="text" placeholder="John Doe" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Expiry</label>
+                        <input type="text" placeholder="MM/YY" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CVV</label>
+                        <input type="password" placeholder="123" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Pay Now</button>
+            </form>
+        </div>
+
+        <div class="summary-panel">
+            <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: #4ecdc4;">Booking Summary</h3>
+            <div id="summaryDetails"></div>
+            <div style="display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: bold; color: #4ecdc4; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid rgba(255, 255, 255, 0.2);">
+                <span>Total:</span>
+                <span id="totalAmount">₹0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function loadBookingData() {
+            const seatBooking = JSON.parse(localStorage.getItem('seatBooking') || '{}');
+            const bookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
+            
+            const summaryDetails = document.getElementById('summaryDetails');
+            summaryDetails.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: rgba(255, 255, 255, 0.7); margin-bottom: 0.25rem;">Movie</div>
+                    <div>${bookingDetails.movie || 'N/A'}</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: rgba(255, 255, 255, 0.7); margin-bottom: 0.25rem;">Theatre</div>
+                    <div>${bookingDetails.theatre || 'N/A'}</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="color: rgba(255, 255, 255, 0.7); margin-bottom: 0.25rem;">Seats</div>
+                    <div>${(seatBooking.seats || []).join(', ')}</div>
+                </div>
+            `;
+            
+            document.getElementById('totalAmount').textContent = `₹${seatBooking.total || 0}`;
+        }
+
+        function processPayment(event) {
+            event.preventDefault();
+            
+            const confirmationData = {
+                bookingId: 'BK' + Date.now(),
+                paymentMethod: 'card',
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('confirmationData', JSON.stringify(confirmationData));
+            
+            setTimeout(() => {
+                window.location.href = 'bookingconf.html';
+            }, 1500);
+        }
+
+        loadBookingData();
+    </script>
+</body>
+</html>
